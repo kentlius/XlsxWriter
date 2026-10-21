@@ -2205,6 +2205,7 @@ class Worksheet(xmlwriter.XMLwriter):
                     cell = self.table[row_num][col_num]
                     cell_type = cell.__class__.__name__
                     length = 0
+                    line_count = 1
 
                     if cell_type in ("String", "RichString"):
                         # Handle strings and rich strings.
@@ -2225,8 +2226,10 @@ class Worksheet(xmlwriter.XMLwriter):
                             length = xl_pixel_width(string)
                         else:
                             # Handle multi-line strings.
-                            for string in string.split("\n"):
-                                seg_length = xl_pixel_width(string)
+                            lines = string.split("\n")
+                            line_count = len(lines)
+                            for line in lines:
+                                seg_length = xl_pixel_width(line)
                                 length = max(length, seg_length)
 
                     elif cell_type == "Number":
@@ -2273,6 +2276,30 @@ class Worksheet(xmlwriter.XMLwriter):
                                 length = 31
                             else:
                                 length = 36
+
+                    # Get the effective format for the cell using Excel's
+                    # precedence: cell format, row format, column format.
+                    cell_format = cell.format
+                    if cell_format is None and row_num in self.row_info:
+                        cell_format = self.row_info[row_num].row_format
+                    if cell_format is None and col_num in self.col_info:
+                        cell_format = self.col_info[col_num].column_format
+
+                    # Adjust the width for rotated text. Excel rotates the text
+                    # block around its center, so the width required for the
+                    # rotated text is the horizontal projection of the text
+                    # width and the text height.
+                    if cell_format is not None and length > 0:
+                        angle = cell_format._get_rotation_angle()
+                        if angle:
+                            font_size = cell_format.font_size or 11
+                            line_height = round(font_size * 4 / 3)
+                            text_height = line_count * line_height
+                            radians = math.radians(angle)
+                            length = round(
+                                length * math.cos(radians)
+                                + text_height * math.sin(radians)
+                            )
 
                     # If the cell is in an autofilter header we add an
                     # additional 16 pixels for the dropdown arrow.

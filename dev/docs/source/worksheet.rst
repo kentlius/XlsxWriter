@@ -1260,9 +1260,12 @@ sufficient and indistinguishable from the output of Excel. However there are
 some limitations to be aware of when using this method:
 
 - It is based on the default Excel font type and size of Calibri 11. It will not
-  give accurate results for other fonts or font sizes.
+  give accurate results for other fonts or font sizes. The font size is used to
+  estimate the text height for rotated text.
 - It doesn't take formatting of numbers or dates account, although this may be
   addressed in a later version.
+- Text rotation is taken into account using a geometric projection of the text
+  width and height. This is only an approximation of Excel's output.
 - Autofit is a relatively expensive operation since it performs a calculation
   for all the populated cells in a worksheet. See the note on performance below.
 

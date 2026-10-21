@@ -1071,6 +1071,22 @@ class Format(xmlwriter.XMLwriter):
     #
     ###########################################################################
 
+    def _get_rotation_angle(self) -> int:
+        """
+        Return the text rotation as a positive angle in the range 0-90.
+
+        Excel stores counterclockwise rotation as 0-90, clockwise rotation as
+        91-180 and vertical text as 255. For autofitting purposes only the
+        magnitude of the angle is required.
+
+        """
+        if self.rotation == 255:
+            return 90
+        if self.rotation > 90:
+            return self.rotation - 90
+
+        return self.rotation
+
     def _get_align_properties(self):
         # pylint: disable=too-many-boolean-expressions
         # Return properties for an Style xf <alignment> sub-element.
